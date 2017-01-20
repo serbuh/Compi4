@@ -1,0 +1,5 @@
+C  myTempVar = 0 K ;
+print myTempVar;
+
+int divRes = 100 C / 300 K ;
+print divRes;

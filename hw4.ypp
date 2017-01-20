@@ -1,0 +1,421 @@
+%{
+	#include <iostream>
+	#include <string>
+	//#include "hw4.hpp"
+	#include "SymbolTable.hpp"
+	
+	using namespace output;
+	using namespace std;
+
+	
+	extern int yylineno;
+	extern int yylex();
+	void yyerror(const char*);
+	string getType(Type type);
+	bool isTemperature(Type type);
+	
+	#define YYERROR_VERBOSE 1
+	#define YYDEBUG 1
+	
+	SymbolTable st = SymbolTable();
+
+	void openNewScope();
+	void closeScope();
+
+	int inCaseDepth = 0;
+	int inWhileDepth = 0;
+	list<bool> magicScopes;
+%}
+
+%token INT STRING TRUE FALSE NUM CASE LP RC COLON SC LC COMMENT
+%token CELSIUS FAHRENHEIT KELVIN PRINT INPUT ID IF WHILE BREAK BOOL SWITCH 
+
+%nonassoc RP
+%right ELSE
+%right ASSIGN
+%left OR
+%left AND
+%left REL_OP
+%left PLUS MINUS
+%left MULT DIV
+%right NOT
+
+%%
+//rules
+Prog : M_NewScope Statements M_CloseScope						{};
+
+Statements : Statements Statement 								{}
+		   | Statement 			  								{};
+
+
+Statement : LC M_NewScope Statements RC M_CloseScope			{}
+
+		  | Type ID SC 											{
+		  															if(st.contains($2.id)){
+		  																errorDef(yylineno,$2.id.c_str());
+		  																exit(1);
+		  															}
+		  															else{
+		  																st.addElement($2.id,getType($2.type));
+		  															}
+		  														}
+
+		  | Type ID ASSIGN Exp SC 								{
+		  															if(st.contains($2.id)){
+		  																errorDef(yylineno,$2.id.c_str());
+		  																exit(1);
+		  															}
+		  															else{
+			  															if($1.type == INT_T || $1.type == BOOL_T){
+																			if($1.type == $4.type){
+																				st.addElement($2.id,getType($2.type));			
+																			}
+																			else{
+																				errorMismatch(yylineno);
+			  																	exit(1);
+																			}
+																		}
+																		else if(isTemperature($1.type)){
+																			if($4.type == INT_T || $4.type == BOOL_T){
+																				errorMismatch(yylineno);
+			  																	exit(1);
+																			}
+																			else{
+																				// add value + type conversion if needed
+																				st.addElement($2.id,getType($2.type));
+																			}
+																		}
+																	}	
+		  														}
+		  | ID ASSIGN Exp SC 									{
+		  															if(st.contains($1.id)){
+		  																Type type = st.find($1.id);
+																		if(type == INT_T || type == BOOL_T){
+																			if(type == $3.type){
+																				//assign value when needed
+																			}
+																			else{
+																				errorMismatch(yylineno);
+			  																	exit(1);
+																			}
+																		}
+																		else if(isTemperature(type)){
+																			if($3.type == INT_T || $3.type == BOOL_T){
+																				errorMismatch(yylineno);
+			  																	exit(1);
+																			}
+																			else{
+																				// assign value + type conversion if needed
+																			}
+																		}
+		  															}
+		  															else{
+		  																errorUndef(yylineno,$1.id.c_str());
+		  																exit(1);
+		  															}
+		  														}
+		  | PRINT ID SC 										{
+		  															if(st.contains($2.id)){
+		  																Type type = st.find($2.id);
+		  																if(isTemperature(type) || type == INT_T){
+		  																	//add printing functions
+		  																}
+		  																else{
+		  																	errorMismatch(yylineno);
+			  																exit(1);
+		  																}
+		  															}
+		  															else{
+		  																errorUndef(yylineno,$2.id.c_str());
+		  																exit(1);
+		  															}
+		  														}
+		  | PRINT STRING SC 									{}
+		  | INPUT ID SC 										{
+		  															if(st.contains($2.id)){
+		  																Type type = st.find($2.id);
+		  																if(isTemperature(type) || type == INT_T){
+		  																	//add input functions
+		  																}
+		  																else{
+		  																	errorMismatch(yylineno);
+			  																exit(1);
+		  																}
+		  															}
+		  															else{
+		  																errorUndef(yylineno,$2.id.c_str());
+		  																exit(1);
+		  															}	
+		  														}
+		  | IF LP BoolExp RP M_NewIfScope Statement M_CloseIfScope	{}
+		  | IF LP BoolExp RP M_NewIfScope Statement M_CloseIfScope ELSE M_NewIfScope Statement M_CloseIfScope  	{}
+		  | WHILE LP BoolExp RP M_NewWhileScope Statement M_CloseWhileScope	{}
+		  | BREAK SC 											{
+		  															if(inWhileDepth == 0){
+		  																errorUnexpectedBreak(yylineno);
+		  																exit(1); 
+		  															}
+		  														}
+		  | SWITCH LP TempExp RP LC CasesList RC 				{}
+		  | COMMENT												{};
+
+TempExp : Exp													{
+																	if(!isTemperature($1.type)){
+																		errorMismatch(yylineno);
+																		exit(1);
+			  														}
+																};
+
+
+BoolExp : Exp													{
+																	if($1.type != BOOL_T){
+		  																errorMismatch(yylineno);
+			  															exit(1);
+			  														}
+																};
+
+CasesList : CaseStat CasesList 									{}
+		  | CaseStat 											{};
+
+CaseStat : CASE NUM TemperatureType COLON M_NewCaseScope Statement BREAK SC M_CloseCaseScope	{};
+
+TemperatureType : CELSIUS 										{$$.type = $1.type;}
+			   | FAHRENHEIT										{$$.type = $1.type;}
+			   | KELVIN											{$$.type = $1.type;};
+
+Type : TemperatureType											{$$.type = $1.type;}
+	 | INT 														{$$.type = $1.type;}
+	 | BOOL 													{$$.type = $1.type;};
+
+M_NewScope : 													{
+																	magicScopes.push_front(false);
+																	openNewScope();
+																};
+
+M_CloseScope :													{
+																	closeScope();
+																	magicScopes.pop_front();
+																};
+
+M_NewIfScope : 													{
+																	magicScopes.push_front(true);
+																	openNewScope();
+																};
+
+M_CloseIfScope : 												{
+																	closeScope();
+																	magicScopes.pop_front();
+																};
+
+M_NewCaseScope : 												{
+																	magicScopes.push_front(true);
+																	openNewScope();
+																};
+
+M_CloseCaseScope : 												{
+																	closeScope();																	magicScopes.pop_front();
+
+																};
+
+M_NewWhileScope : 												{
+																	magicScopes.push_front(true);
+																	inWhileDepth++;
+																	openNewScope();
+																};
+
+M_CloseWhileScope : 											{
+																	closeScope();
+																	magicScopes.pop_front();
+																	inWhileDepth--;
+																};
+
+Exp : LP Exp RP 												{$$.type = $2.type;}
+    | Exp PLUS Exp												{
+    																if($1.type == INT_T && $3.type == INT_T){
+    																	//add values
+    																	$$.type = $1.type;
+    																}
+    																else if(isTemperature($1.type) && isTemperature($3.type)){
+    																	//add and possibly convert types
+    																	$$.type = $1.type;
+    																}
+    																else{
+    																	errorMismatch(yylineno);
+			  															exit(1);
+    																}
+    															}
+    | Exp MINUS Exp												{
+    																if($1.type == INT_T && $3.type == INT_T){
+    																	//add values
+    																	$$.type = $1.type;
+    																}
+    																else if(isTemperature($1.type) && isTemperature($3.type)){
+    																	//add and possibly convert types
+    																	$$.type = $1.type;
+    																}
+    																else{
+    																	errorMismatch(yylineno);
+			  															exit(1);
+    																}
+    															}
+    | Exp MULT Exp												{
+    																if(isTemperature($1.type) && isTemperature($3.type)){
+    																	errorMismatch(yylineno);
+			  															exit(1);
+    																}
+    																else if(isTemperature($1.type) && $3.type == INT_T){
+    																	//mul values...
+    																	$$.type = $1.type;
+    																}
+    																else if(isTemperature($3.type) && $1.type == INT_T){
+    																	//mul values...
+    																	$$.type = $3.type;
+    																}
+    																else if($1.type == INT_T && $3.type == INT_T){
+    																	//mul values...
+    																	$$.type = INT_T;	
+    																}
+    																else{
+    																	errorMismatch(yylineno);
+			  															exit(1);
+    																}
+    															}
+    | Exp DIV Exp												{
+    																if(isTemperature($1.type) && isTemperature($3.type)){
+    																	//div temps and get int...
+    																	$$.type = INT_T;	
+    																}
+    																else if(isTemperature($1.type) && $3.type == INT_T){
+    																	//div values...
+    																	$$.type = $1.type;
+    																}
+    																else if(isTemperature($3.type) && $1.type == INT_T){
+    																	errorMismatch(yylineno);
+			  															exit(1);
+    																}
+    																else if($1.type == INT_T && $3.type == INT_T){
+    																	//div values...
+    																	$$.type = INT_T;	
+    																}
+    																else{
+    																	errorMismatch(yylineno);
+			  															exit(1);
+    																}
+    															}
+	| ID														{
+																	if(st.contains($1.id)){
+																		//assign values...
+																		$$.type = st.find($1.id);
+																	}
+																	else{
+																		errorUndef(yylineno,$1.id.c_str());
+		  																exit(1);
+																	}
+																}
+	| NUM														{$$.type = INT_T;}
+	| NUM TemperatureType										{$$.type = $2.type;}
+	| TRUE														{$$.type = $1.type;}
+	| FALSE														{$$.type = $1.type;}
+	| NOT Exp													{
+																	if($2.type == BOOL_T){
+																		// assign value...
+																		$$.type = BOOL_T;
+																	}
+																	else{
+																		errorMismatch(yylineno);
+			  															exit(1);
+																	}
+																}
+	| Exp OR Exp												{
+																	if($1.type == BOOL_T && $3.type == BOOL_T){
+																		// assign value...
+																		$$.type = BOOL_T;
+																	}
+																	else{
+																		errorMismatch(yylineno);
+			  															exit(1);
+																	}
+																}
+	| Exp AND Exp												{
+																	if($1.type == BOOL_T && $3.type == BOOL_T){
+																		// assign value...
+																		$$.type = BOOL_T;
+																	}
+																	else{
+																		errorMismatch(yylineno);
+			  															exit(1);
+																	}
+																}
+	| Exp REL_OP Exp											{
+																	if(isTemperature($1.type) && isTemperature($3.type)){
+    																	//choose bool value...
+    																	$$.type = BOOL_T;
+    																}
+    																else if($1.type == INT_T && $3.type == INT_T){
+    																	//choose bool value...
+    																	$$.type = BOOL_T;
+    																}
+    																else{
+    																	errorMismatch(yylineno);
+			  															exit(1);
+    																}
+																};
+
+%%
+
+void openNewScope(){
+	st.addTable();
+}
+
+void closeScope(){
+	bool magicScopeFlag = magicScopes.front();
+	if (magicScopeFlag && st.tableSize() == 0){
+		st.removeTable();
+		return;
+	}
+	endScope();
+	st.printTable();
+	st.removeTable();
+}
+
+string getType(Type type){
+	string t;
+	switch(type){
+		case CELSIUS_T:
+			t = "CELSIUS";
+			break;
+		case FAHRENHEIT_T:
+			t = "FAHRENHEIT";
+			break;
+		case KELVIN_T:
+			t = "KELVIN";
+			break;
+		case BOOL_T:
+			t = "BOOL";
+			break;
+		case INT_T:
+			t = "INT";
+			break;
+		case STRING_T:
+			t = "STRING";
+			break;
+	}
+	return t;
+}
+
+bool isTemperature(Type type){
+	return (type == FAHRENHEIT_T || type == CELSIUS_T || type == KELVIN_T);
+}
+
+void yyerror(const char* s){
+
+	errorSyn(yylineno);
+
+	exit(1);
+}
+
+int main()
+{
+	yyparse();
+}
+
