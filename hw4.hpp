@@ -14,6 +14,8 @@ typedef struct{
 	bool boolean;
 	Type type;
 	
+	std::string rel_op;
+	std::string place;
 	//int lineNum;
 
 }Var;

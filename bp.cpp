@@ -2,10 +2,11 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
+#include <string>
 using namespace std;
 
 vector<string> buffer;
-int tempVarCount = 0;
+long long tempVarCount = 0;
 
 int next(){
     return buffer.size();    
@@ -45,7 +46,7 @@ list<int> merge(list<int> l1,list<int> l2)
 }
 
 string newTemp(){
-	string newVar = "@t";
-	return newVar + std::to_string(tempVarCount++);
+	string newVar = "s[" + std::to_string(tempVarCount++) + "]";
+	return newVar;
 }
 

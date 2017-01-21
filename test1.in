@@ -1,0 +1,264 @@
+C var_C = 583 K ;
+print var_C;
+C varC = 583 F ;
+print varC;
+varC = 583 C ;
+print varC;
+
+K varK = 583 C ;
+print varK;
+varK = 583 F ;
+print varK;
+varK = 583 K;
+print varK;
+
+F varF = 583 C;
+print varF;
+varF = 583 K;
+print varF;
+varF = 583 F;
+print varF;
+
+//------------------
+int divCheck = 300 C / 6 C;
+print divCheck;
+//------------------
+
+if ( 300 C > ( 10 C - 200 K ) ){
+print "success =)";
+}
+
+if ( 300 C > 500 C ){
+print "failure =(";
+}
+
+if ( 300 C < 500 C ){
+print "success =)";
+}
+
+if ( 500 C < 300 C ){
+print "failure =(";
+}
+
+if ( 300 C <= 500 C ){
+print "success =)";
+}
+
+if ( 300 C <= 300 C ){
+print "success =)";
+}
+
+if ( 500 C <= 300 C ){
+print "failure =(";
+}
+
+if ( 300 C >= ( 10 C - 200 K ) ){
+print "success =)";
+}
+
+if ( 300 C >= 300 C ){
+print "success =)";
+}
+
+if ( 300 C >= 500 C ){
+print "failure =(";
+}
+
+if ( 300 C == 300 C ){
+print "success =)";
+}
+
+if ( 300 C == 500 C ){
+print "failure =(";
+}
+
+if ( 300 C != 500 C ){
+	print "success =)";
+}
+
+if ( 300 C != 300 C ){
+	print "failure =(";
+}
+
+//------------------
+
+if ( 300 C > ( 10 C + 200 K ) ){
+	print "success =)";
+}
+else{
+	print "failure =(";
+}
+
+if ( ( 10 C + 200 K ) >  300 C){
+	print "failure =(";
+}
+else{
+	print "success =)";
+}
+
+if ( 300 C < ( 10 C + 400 C ) ){ 
+	print "success =)";
+}
+else{
+	print "failure =(";
+}
+
+if ( ( 10 C + 400 C ) <  300 C){ 
+	print "failure =(";
+}
+else{
+	print "success =)";
+}
+
+if ( 300 C <= ( 10 C + 200 K ) ){
+	print "failure =(";
+}
+else{
+	print "success =)";
+}
+
+if ( 300 C <= 300 C ){
+	print "success =)";
+}
+else{
+	print "failure =(";
+}
+
+if ( 300 C <= 500 C ){
+	print "success =)";
+}
+else{
+	print "failure =(";
+}
+
+if ( 10 C >= ( 10 C / 2 ) ){ 
+	print "success =)";
+}
+else{
+	print "failure =(";
+}
+
+if ( ( 10 C / 2 ) >=  10 C){ 
+	print "failure =(";
+}
+else{
+	print "success =)";
+}
+
+if ( 10 C >= 10 C ){ 
+	print "success =)";
+}
+else{
+	print "failure =(";
+}
+
+
+if ( 300 K != ( 10 * 200 K ) ){
+	print "success =)";
+}
+else{
+	print "failure =(";
+}
+
+if ( 300 K != ( 10 * 30 K ) ){
+	print "failure =(";
+}
+else{
+	print "success =)";
+}
+
+if ( 300 F == ( 10 * 30 F ) ){
+	print "success =)";
+}
+else{
+	print "failure =(";
+}
+
+if ( 500 F == ( 10 * 30 F ) ){
+	print "failure =(";
+}
+else{
+	print "success =)";
+}
+
+//------------------
+
+if ( 300 >= 300  ){
+	print "success =)";
+}
+
+if ( 300  >= 500  ){
+	print "failure =(";
+}
+
+if ( 500 > 300  ){
+	print "success =)";
+}
+
+if ( 300  > 500  ){
+	print "failure =(";
+}
+
+//------------------
+
+if ( false or true){
+	print "success =)";
+}
+else{
+	print "failure =(";
+}
+
+if ( false and true ){
+	print "failure =(";
+}
+else{
+	print "success =)";
+}
+
+//------------------
+int i = 5;
+while(i > 0){
+	print "this print should appear 5 times!";
+	i = i - 1;
+}
+
+i = 10;
+while(i > 0){
+	if(i == 5){
+		break;
+	}
+	print "this print should appear 5 times before break!";
+	i = i - 1;
+}
+
+varC = 0 C;
+while(varC == 0 C){
+	int j = 5; 
+	while(j > 0){
+		if(j == 5){
+			break;
+		}
+		j = j - 1;
+	}
+	print "this print should appear one time!";
+	varC = 161803 C;
+	if(varC == 161803 C){
+		break;
+	}
+	print "this print should not appear!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
+}
+print "if this print dosn't appear it means something is f*****up!!!";
+
+switch( 300 C ){
+	case 5 C : 
+		print "failure =(";
+		break;
+	case 572 F :
+		print "success =)";
+		break;
+	case 0 K :
+		print "failure =(";
+		break;
+}
+
+print "GOOD JOB!";

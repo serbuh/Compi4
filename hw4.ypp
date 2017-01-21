@@ -1,9 +1,11 @@
 %{
 	#include <iostream>
 	#include <string>
+	#include <sstream>
 	//#include "hw4.hpp"
 	#include "SymbolTable.hpp"
 	
+	#include "bp.hpp"	
 	using namespace output;
 	using namespace std;
 
@@ -21,6 +23,19 @@
 
 	void openNewScope();
 	void closeScope();
+
+	string C2F(string place);
+	string F2C(string place);
+
+	string C2K(string place);
+	string K2C(string place);
+
+	string F2K(string place);
+	string K2F(string place);
+
+	string convertValue(Type t1 , Type t2 , string place);
+
+	//bool relOp( Type t1 ,int num1, Type t2 , int num2 , string rel_op);
 
 	int inCaseDepth = 0;
 	int inWhileDepth = 0;
@@ -56,7 +71,7 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{}
 		  																exit(1);
 		  															}
 		  															else{
-		  																st.addElement($2.id,getType($2.type));
+		  																st.addElement($2.id,getType($1.type),newTemp());
 		  															}
 		  														}
 
@@ -65,10 +80,13 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{}
 		  																errorDef(yylineno,$2.id.c_str());
 		  																exit(1);
 		  															}
-		  															else{
+		  															else{	
+		  																ostringstream stream;
 			  															if($1.type == INT_T || $1.type == BOOL_T){
 																			if($1.type == $4.type){
-																				st.addElement($2.id,getType($2.type));			
+																				st.addElement($2.id,getType($1.type),newTemp());
+																				stream << st.getPlace($2.id) << "=" << $4.place;	
+																				emit(stream.str());
 																			}
 																			else{
 																				errorMismatch(yylineno);
@@ -82,17 +100,22 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{}
 																			}
 																			else{
 																				// add value + type conversion if needed
-																				st.addElement($2.id,getType($2.type));
+																				st.addElement($2.id,getType($1.type),newTemp());
+																				stream << st.getPlace($2.id) << "=";
+																				stream << convertValue($1.type,$4.type,$4.place); 
+																				emit(stream.str());
 																			}
 																		}
 																	}	
 		  														}
 		  | ID ASSIGN Exp SC 									{
 		  															if(st.contains($1.id)){
+		  																ostringstream stream;
+		  																stream << st.getPlace($1.id) << "=";
 		  																Type type = st.find($1.id);
 																		if(type == INT_T || type == BOOL_T){
 																			if(type == $3.type){
-																				//assign value when needed
+																				stream << $3.place;
 																			}
 																			else{
 																				errorMismatch(yylineno);
@@ -105,9 +128,10 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{}
 			  																	exit(1);
 																			}
 																			else{
-																				// assign value + type conversion if needed
+																				stream << convertValue(type,$3.type,$3.place);
 																			}
 																		}
+																		emit(stream.str());
 		  															}
 		  															else{
 		  																errorUndef(yylineno,$1.id.c_str());
@@ -118,7 +142,9 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{}
 		  															if(st.contains($2.id)){
 		  																Type type = st.find($2.id);
 		  																if(isTemperature(type) || type == INT_T){
-		  																	//add printing functions
+		  																	ostringstream stream;
+		  																	stream << "print " << st.getPlace($2.id);
+		  																	emit(stream.str());
 		  																}
 		  																else{
 		  																	errorMismatch(yylineno);
@@ -130,12 +156,19 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{}
 		  																exit(1);
 		  															}
 		  														}
-		  | PRINT STRING SC 									{}
+		  | PRINT STRING SC 									{
+		  															ostringstream stream;
+		  															stream << "print " << $2.string;
+		  															emit(stream.str());
+		  														}
 		  | INPUT ID SC 										{
 		  															if(st.contains($2.id)){
+		  																ostringstream stream;
 		  																Type type = st.find($2.id);
 		  																if(isTemperature(type) || type == INT_T){
 		  																	//add input functions
+		  																	stream << "input " << st.getPlace($2.id);
+		  																	emit(stream.str());
 		  																}
 		  																else{
 		  																	errorMismatch(yylineno);
@@ -231,12 +264,20 @@ M_CloseWhileScope : 											{
 
 Exp : LP Exp RP 												{$$.type = $2.type;}
     | Exp PLUS Exp												{
+    																ostringstream stream;
     																if($1.type == INT_T && $3.type == INT_T){
     																	//add values
+    																	$$.place = newTemp();
+    																	stream << $$.place << "=" << $1.place << "+" << $3.place;
+    																	emit(stream.str());
     																	$$.type = $1.type;
     																}
     																else if(isTemperature($1.type) && isTemperature($3.type)){
     																	//add and possibly convert types
+    																	string newPlace = convertValue($1.type,$3.type,$3.place); 
+    																	$$.place = newTemp();
+    																	stream << $$.place << "=" << $1.place << "+" << newPlace;
+    																	emit(stream.str());
     																	$$.type = $1.type;
     																}
     																else{
@@ -245,12 +286,20 @@ Exp : LP Exp RP 												{$$.type = $2.type;}
     																}
     															}
     | Exp MINUS Exp												{
+    																ostringstream stream;
     																if($1.type == INT_T && $3.type == INT_T){
-    																	//add values
+    																	//subtract values
+    																	$$.place = newTemp();
+    																	stream << $$.place << "=" << $1.place << "-" << $3.place;
+    																	emit(stream.str());
     																	$$.type = $1.type;
     																}
     																else if(isTemperature($1.type) && isTemperature($3.type)){
     																	//add and possibly convert types
+    																	string newPlace = convertValue($1.type,$3.type,$3.place); 
+    																	$$.place = newTemp();
+    																	stream << $$.place << "=" << $1.place << "-" << newPlace;
+    																	emit(stream.str());
     																	$$.type = $1.type;
     																}
     																else{
@@ -259,20 +308,30 @@ Exp : LP Exp RP 												{$$.type = $2.type;}
     																}
     															}
     | Exp MULT Exp												{
+    																ostringstream stream;
     																if(isTemperature($1.type) && isTemperature($3.type)){
     																	errorMismatch(yylineno);
 			  															exit(1);
     																}
     																else if(isTemperature($1.type) && $3.type == INT_T){
     																	//mul values...
+    																	$$.place = newTemp();
+    																	stream << $$.place << "=" << $1.place << "*" << $3.place;
+    																	emit(stream.str());
     																	$$.type = $1.type;
     																}
     																else if(isTemperature($3.type) && $1.type == INT_T){
     																	//mul values...
+    																	$$.place = newTemp();
+    																	stream << $$.place << "=" << $1.place << "*" << $3.place;
+    																	emit(stream.str());
     																	$$.type = $3.type;
     																}
     																else if($1.type == INT_T && $3.type == INT_T){
     																	//mul values...
+    																	$$.place = newTemp();
+    																	stream << $$.place << "=" << $1.place << "*" << $3.place;
+    																	emit(stream.str());
     																	$$.type = INT_T;	
     																}
     																else{
@@ -281,12 +340,21 @@ Exp : LP Exp RP 												{$$.type = $2.type;}
     																}
     															}
     | Exp DIV Exp												{
+        															ostringstream stream;
     																if(isTemperature($1.type) && isTemperature($3.type)){
     																	//div temps and get int...
+    																	//TODO convert
+    																	string newPlace = convertValue($1.type,$3.type,$3.place); 
+    																	$$.place = newTemp();
+    																	stream << $$.place << "=" << $1.place << "/" << newPlace;
+    																	emit(stream.str());
     																	$$.type = INT_T;	
     																}
     																else if(isTemperature($1.type) && $3.type == INT_T){
     																	//div values...
+    																	$$.place = newTemp();
+    																	stream << $$.place << "=" << $1.place << "/" << $3.place;
+    																	emit(stream.str());
     																	$$.type = $1.type;
     																}
     																else if(isTemperature($3.type) && $1.type == INT_T){
@@ -295,6 +363,9 @@ Exp : LP Exp RP 												{$$.type = $2.type;}
     																}
     																else if($1.type == INT_T && $3.type == INT_T){
     																	//div values...
+    																	$$.place = newTemp();
+    																	stream << $$.place << "=" << $1.place << "/" << $3.place;
+    																	emit(stream.str());
     																	$$.type = INT_T;	
     																}
     																else{
@@ -305,6 +376,7 @@ Exp : LP Exp RP 												{$$.type = $2.type;}
 	| ID														{
 																	if(st.contains($1.id)){
 																		//assign values...
+																		$$.place = st.getPlace($1.id);
 																		$$.type = st.find($1.id);
 																	}
 																	else{
@@ -312,13 +384,37 @@ Exp : LP Exp RP 												{$$.type = $2.type;}
 		  																exit(1);
 																	}
 																}
-	| NUM														{$$.type = INT_T;}
-	| NUM TemperatureType										{$$.type = $2.type;}
-	| TRUE														{$$.type = $1.type;}
-	| FALSE														{$$.type = $1.type;}
+	| NUM														{
+																	ostringstream stream;
+																	$$.place = newTemp();
+																	stream << $$.place << "=" << $1.integer;
+																	emit(stream.str());
+																	$$.type = INT_T;
+																}
+	| NUM TemperatureType										{
+																	ostringstream stream;
+																	$$.place = newTemp();
+																	stream << $$.place << "=" << $1.integer;
+																	emit(stream.str());
+																	$$.type = $2.type;
+																}
+	| TRUE														{
+																	ostringstream stream;
+																	$$.place = newTemp();
+																	stream << $$.place << "=1";
+																	emit(stream.str());
+																	$$.type = $1.type;
+																}
+	| FALSE														{	
+																	ostringstream stream;
+																	$$.place = newTemp();
+																	stream << $$.place << "=0";
+																	emit(stream.str());
+																	$$.type = $1.type;}
 	| NOT Exp													{
 																	if($2.type == BOOL_T){
 																		// assign value...
+																		//$$.boolean = !$2.boolean;
 																		$$.type = BOOL_T;
 																	}
 																	else{
@@ -329,6 +425,7 @@ Exp : LP Exp RP 												{$$.type = $2.type;}
 	| Exp OR Exp												{
 																	if($1.type == BOOL_T && $3.type == BOOL_T){
 																		// assign value...
+																		//$$.boolean = $1.boolean || $3.boolean;
 																		$$.type = BOOL_T;
 																	}
 																	else{
@@ -339,6 +436,7 @@ Exp : LP Exp RP 												{$$.type = $2.type;}
 	| Exp AND Exp												{
 																	if($1.type == BOOL_T && $3.type == BOOL_T){
 																		// assign value...
+																		//$$.boolean = $1.boolean && $3.boolean;
 																		$$.type = BOOL_T;
 																	}
 																	else{
@@ -373,8 +471,8 @@ void closeScope(){
 		st.removeTable();
 		return;
 	}
-	endScope();
-	st.printTable();
+	//endScope();
+	//st.printTable();
 	st.removeTable();
 }
 
@@ -414,8 +512,124 @@ void yyerror(const char* s){
 	exit(1);
 }
 
+string C2F(string place){
+	//return ((C * 9) / 5) + 32;
+	ostringstream stream;
+	string newPlace1 = newTemp() , newPlace2 = newTemp() , newPlace3 = newTemp();
+	stream << newPlace1 << "=" << place << "*9";
+	emit(stream.str());
+	stream.str("");
+	stream << newPlace2 << "=" << newPlace1 << "/5";
+	emit(stream.str());
+	stream.str("");
+	stream << newPlace3 << "=" << newPlace2 << "+32";
+	emit(stream.str());
+	return newPlace3;
+
+}
+
+string F2C(string place){
+	//return ((F - 32) * 5) / 9;
+	ostringstream stream;
+	string newPlace1 = newTemp() , newPlace2 = newTemp() , newPlace3 = newTemp();
+	stream << newPlace1 << "=" << place << "-32";
+	emit(stream.str());
+	stream.str("");;
+	stream << newPlace2 << "=" << newPlace1 << "*5";
+	emit(stream.str());
+	stream.str("");;
+	stream << newPlace3 << "=" << newPlace2 << "/9";
+	emit(stream.str());
+	return newPlace3;
+}
+
+string C2K(string place){
+	//return C + 273;
+	ostringstream stream;
+	string newPlace = newTemp();
+	stream << newPlace << "=" << place << "+273";
+	emit(stream.str());
+	return newPlace;
+}
+
+string K2C(string place){
+	//return K - 273;
+	ostringstream stream;
+	string newPlace = newTemp();
+	stream << newPlace << "=" << place << "-273";
+	emit(stream.str());
+	return newPlace;
+}
+
+string F2K(string place){
+	return C2K(F2C(place));
+}
+
+string K2F(string place){
+	return C2F(K2C(place));	
+}
+
+string convertValue(Type t1 , Type t2 , string place){
+	
+	if(t1 == CELSIUS_T && t2 == FAHRENHEIT_T){
+		return F2C(place);
+	}
+	else if(t1 == FAHRENHEIT_T && t2 == CELSIUS_T){
+		return C2F(place);
+	}
+	else if(t1 == CELSIUS_T && t2 == KELVIN_T){
+		return K2C(place);
+	}
+	else if(t1 == KELVIN_T && t2 == CELSIUS_T){
+		return C2K(place);
+	}
+	else if(t1 == FAHRENHEIT_T && t2 == KELVIN_T){
+		return K2F(place);
+	}
+	else if(t1 == KELVIN_T && t2 == FAHRENHEIT_T){
+		return F2K(place);
+	}
+	else{
+		return place;
+	}
+}
+
+/*void relOp( Type t1 ,int num1, Type t2 , int num2 , string rel_op){
+	int rVal;
+	
+	if(t1 == INT_T && t2 == INT_T){
+		rVal = num2;
+	}
+	else if(isTemperature(t1) && isTemperature(t2)){
+		rVal = getValue(t1,t2,num2);	
+	}
+	else{
+		// DO NOT GET HERE!!!
+	}
+
+	if(rel_op.compare("<=")){
+		return num1 <= rVal;
+	}
+	else if(rel_op.compare(">=")){
+		return num1 >= rVal;
+	}
+	else if(rel_op.compare("==")){
+		return num1 == rVal;
+	}
+	else if(rel_op.compare("!=")){
+		return num1 != rVal;
+	}
+	else if(rel_op.compare(">")){
+		return num1 > rVal;
+	}
+	else if(rel_op.compare("<")){
+		return num1 < rVal;
+	}
+}*/
+
 int main()
 {
 	yyparse();
+	printBuffer();
 }
 

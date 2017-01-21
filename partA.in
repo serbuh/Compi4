@@ -1,0 +1,26 @@
+C var_C = 583 K ;
+print var_C;
+C varC = 583 F ;
+print varC;
+varC = 583 C ;
+print varC;
+
+K varK = 583 C ;
+print varK;
+varK = 583 F ;
+print varK;
+varK = 583 K;
+print varK;
+
+F varF = 583 C;
+print varF;
+varF = 583 K;
+print varF;
+varF = 583 F;
+print varF;
+
+//------------------
+int divCheck = 300 C / 6 C;
+print divCheck;
+//------------------
+

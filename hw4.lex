@@ -66,7 +66,10 @@ whitespace		([ \t\n])
 {MINUS}				{return MINUS;}
 {MULT}				{return MULT;}
 {DIV}				{return DIV;}
-{REL_OP}			{return REL_OP;}
+{REL_OP}			{
+						yylval.rel_op = yytext;
+						return REL_OP;
+					}
 {AND}				{return AND;}
 {OR}				{return OR;}
 

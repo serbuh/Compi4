@@ -12,7 +12,7 @@
 using namespace output;
 using namespace std;
 
-typedef tuple<string, int, string> tableElement;
+typedef tuple<string, int, string, string> tableElement;
 typedef list<tableElement> table;
 typedef list<table> Tables;
 typedef list<int> Offsets;
@@ -35,10 +35,10 @@ public:
   }
 
 	//Adds an element to the top table on the tables stack
-	void addElement(string id,string type){
+	void addElement(string id,string type,string place){
 		//std::cout << id;
 		int offset = offsets.front();
-		tableElement newElement(id , offset , type);
+		tableElement newElement(id , offset , type , place);
 		tables.front().push_back(newElement);
 		offsets.pop_front();
 		offsets.push_front(offset + 1);
@@ -80,16 +80,27 @@ public:
 
 	// Return the type of the element id
 	Type find(string id){
-		string id2search(id);
 		for (Tables::iterator table = tables.begin(); table != tables.end(); table++){
 			for (table::iterator elem = (*table).begin(); elem != (*table).end(); elem++){
 				string cuurentId(get<0>(*elem));
-				if (cuurentId == id2search)
+				if (cuurentId == id)
 					return type2Enum(get<2>(*elem));
 			}
 		}
 		// never will happen - I hope...
 		return BOOL_T;
+	}
+
+	string getPlace(string id){
+		for (Tables::iterator table = tables.begin(); table != tables.end(); table++){
+			for (table::iterator elem = (*table).begin(); elem != (*table).end(); elem++){
+				string cuurentId(get<0>(*elem));
+				if (cuurentId == id)
+					return get<3>(*elem);
+			}
+		}
+		// never will happen - I hope...
+		return "FUCK!!";	
 	}
 
 	Type type2Enum(string type){
