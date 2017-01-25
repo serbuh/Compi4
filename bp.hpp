@@ -2,7 +2,9 @@
 #define EX5_CODE_GEN
 
 #include <list>
+#include <stack>
 #include <string>
+#include "hw4.hpp"
 using namespace std;
 
 int next();
@@ -46,6 +48,8 @@ void printBuffer();
 string newTemp();
 
 list<int> makelist(int litem);
+
+stack<CaseElem> makestack(CaseElem litem);
 
 list<int> merge(list<int> l1,list<int> l2);
 

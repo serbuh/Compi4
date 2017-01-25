@@ -1,4 +1,5 @@
 #include "bp.hpp"
+#include "hw4.hpp"
 #include <vector>
 #include <iostream>
 #include <sstream>
@@ -35,6 +36,13 @@ list<int> makelist(int litem)
 	list<int> newList;
 	newList.push_front(litem);
 	return newList;
+}
+
+stack<CaseElem> makestack(CaseElem litem)
+{
+	stack<CaseElem> newStack;
+	newStack.push(litem);
+	return newStack;
 }
 
 list<int> merge(list<int> l1,list<int> l2)

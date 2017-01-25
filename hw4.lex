@@ -119,7 +119,7 @@ whitespace		([ \t\n])
 					}
 
 {NUM} 				{
-						yylval.integer = atoi(yytext);
+						yylval.num = atoi(yytext);
 						return NUM;
 					}
 

@@ -2,7 +2,6 @@
 	#include <iostream>
 	#include <string>
 	#include <sstream>
-	//#include "hw4.hpp"
 	#include "SymbolTable.hpp"
 	
 	#include "bp.hpp"	
@@ -34,8 +33,6 @@
 	string K2F(string place);
 
 	string convertValue(Type t1 , Type t2 , string place);
-
-	//bool relOp( Type t1 ,int num1, Type t2 , int num2 , string rel_op);
 
 	int inCaseDepth = 0;
 	int inWhileDepth = 0;
@@ -229,8 +226,25 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{
 																	emit("goto ");
 		  														}
 
-		  | SWITCH LP SwitchExp RP LC CasesList RC 				{
-		  															//TODO
+		  | SWITCH LP SwitchExp RP N_BP LC CasesList RC 		{
+		  															bp($5.nextlist, next());
+		  															while(!$7.caselist.empty()){
+
+			  															CaseElem case_elem_top = $7.caselist.top();
+																		$7.caselist.pop();	
+																		
+																		ostringstream stream;
+																		int elem_instr = get<0>(case_elem_top);
+																		int elem_num = get<1>(case_elem_top);
+																		Type elem_type = get<2>(case_elem_top);
+																		string converted_swtch_exp = convertValue(elem_type, $3.type, $3.place);
+
+																		stream << "if " << converted_swtch_exp << "==" << elem_num << " goto " << elem_instr;
+																		emit(stream.str());
+		  															}
+		  															$$.nextlist = merge($7.nextlist, makelist(next()));
+		  															$$.breaklist = $7.breaklist;
+		  															emit("goto ");
 		  														}
 
 		  | COMMENT												{};
@@ -240,7 +254,7 @@ SwitchExp : Exp													{
 																		errorMismatch(yylineno);
 																		exit(1);
 			  														}
-			  														
+
 			  														$$.place = $1.place;
 																};
 
@@ -256,14 +270,29 @@ BoolExp : Exp													{
 																};
 
 CasesList : CaseStat CasesList 									{
-																	//TODO
+																	$$.caselist = $2.caselist;
+																	CaseElem case_elem($1.instruct, $1.num, $1.type);
+																	$$.caselist.push(case_elem);
+
+																	$$.nextlist=merge($2.nextlist,$1.nextlist);
+																	$$.breaklist=merge($2.breaklist,$1.breaklist);
 																}
+
 		  | CaseStat 											{
-		  															//TODO
+																	CaseElem case_elem($1.instruct, $1.num, $1.type);
+		  															$$.caselist = makestack(case_elem);
+		  															
+																	$$.nextlist = $1.nextlist;
+																	$$.breaklist = $1.breaklist;
 		  														};
 
-CaseStat : CASE NUM TemperatureType COLON M_NewCaseScope Statement BREAK SC M_CloseCaseScope	{
-																	//TODO
+CaseStat : CASE NUM TemperatureType COLON M_NewCaseScope M_BP Statement N_BP BREAK SC M_CloseCaseScope	{
+																	$$.instruct = $6.instruct;
+																	$$.num = $2.num;
+																	$$.type = $3.type;
+
+																	$$.nextlist = merge($7.nextlist, $8.nextlist); 
+																	$$.breaklist = $7.breaklist;
 																};
 
 TemperatureType : CELSIUS 										{$$.type = $1.type;}
@@ -426,7 +455,7 @@ Exp : LP Exp RP 												{
     																	$$.place = newTemp();
     																	stream << $$.place << "=" << $1.place << "/" << newPlace;
     																	emit(stream.str());
-    																	$$.type = INT_T;	
+    																	$$.type = INT_T;
     																}
     																else if(isTemperature($1.type) && $3.type == INT_T){
     																	//div values...
@@ -480,7 +509,7 @@ Exp : LP Exp RP 												{
 	| NUM														{
 																	ostringstream stream;
 																	$$.place = newTemp();
-																	stream << $$.place << "=" << $1.integer;
+																	stream << $$.place << "=" << $1.num;
 																	emit(stream.str());
 																	$$.type = INT_T;
 																}
@@ -488,7 +517,7 @@ Exp : LP Exp RP 												{
 	| NUM TemperatureType										{
 																	ostringstream stream;
 																	$$.place = newTemp();
-																	stream << $$.place << "=" << $1.integer;
+																	stream << $$.place << "=" << $1.num;
 																	emit(stream.str());
 																	$$.type = $2.type;
 																}
