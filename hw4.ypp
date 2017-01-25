@@ -624,12 +624,13 @@ Exp : LP Exp RP 												{
 																}
 
 	| Exp REL_OP Exp											{
+																	string lexp = $1.place;
+																	string rexp = $3.place;
 																	if(isTemperature($1.type) && isTemperature($3.type)){
-    																	//choose bool value...
     																	$$.type = BOOL_T;
+    																	rexp = convertValue($1.type, $3.type, $3.place); 
     																}
     																else if($1.type == INT_T && $3.type == INT_T){
-    																	//choose bool value...
     																	$$.type = BOOL_T;
     																}
     																else{
@@ -654,11 +655,11 @@ Exp : LP Exp RP 												{
 																		$$.falselist = makelist(next()+2);
 
 																		ostringstream stream_1;
-																		stream_1 << "if " << $1.place << rel_op_second << $3.place << " goto ";
+																		stream_1 << "if " << lexp << rel_op_second << rexp << " goto ";
 																		emit(stream_1.str());
 																		
 																		ostringstream stream_2;
-																		stream_2 << "if " << $1.place << "==" << $3.place << " goto ";
+																		stream_2 << "if " << lexp << "==" << rexp << " goto ";
 																		emit(stream_2.str());
 
 																	} else {
@@ -666,7 +667,7 @@ Exp : LP Exp RP 												{
 	    																$$.falselist = makelist(next()+1);
 
 																		ostringstream stream;
-																		stream << "if " << $1.place << $2.rel_op << $3.place << " goto ";
+																		stream << "if " << lexp << $2.rel_op << rexp << " goto ";
 																		emit(stream.str());
 																	}
 																	
