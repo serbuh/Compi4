@@ -59,11 +59,20 @@
 //rules
 Prog : M_NewScope Statements M_CloseScope						{};
 
-Statements : Statements Statement 								{}
-		   | Statement 			  								{};
+Statements : Statements Statement M_BP							{
+																	bp($2.nextlist, $3.instruct);
+																	$$.nextlist = $3.nextlist;
+																}
+
+		   | Statement M_BP				  						{
+		   															bp($1.nextlist, $2.instruct);
+		   															$$.nextlist = $1.nextlist;
+		   														};
 
 
-Statement : LC M_NewScope Statements RC M_CloseScope			{}
+Statement : LC M_NewScope Statements RC M_CloseScope			{
+																	$$.nextlist = $3.nextlist;
+																}
 
 		  | Type ID SC 											{
 		  															if(st.contains($2.id)){
@@ -100,9 +109,9 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{}
 																			}
 																			else{
 																				// add value + type conversion if needed
-																				st.addElement($2.id,getType($1.type),newTemp());
+																				st.addElement($2.id,getType($1.type), newTemp());
 																				stream << st.getPlace($2.id) << "=";
-																				stream << convertValue($1.type,$4.type,$4.place); 
+																				stream << convertValue($1.type, $4.type, $4.place); 
 																				emit(stream.str());
 																			}
 																		}
@@ -128,7 +137,7 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{}
 			  																	exit(1);
 																			}
 																			else{
-																				stream << convertValue(type,$3.type,$3.place);
+																				stream << convertValue(type, $3.type, $3.place);
 																			}
 																		}
 																		emit(stream.str());
@@ -180,9 +189,27 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{}
 		  																exit(1);
 		  															}	
 		  														}
-		  | IF LP BoolExp RP M_NewIfScope Statement M_CloseIfScope	{}
-		  | IF LP BoolExp RP M_NewIfScope Statement M_CloseIfScope ELSE M_NewIfScope Statement M_CloseIfScope  	{}
-		  | WHILE LP BoolExp RP M_NewWhileScope Statement M_CloseWhileScope	{}
+		  | IF LP BoolExp RP M_NewIfScope M_BP Statement M_CloseIfScope	{ 
+		  															bp($3.truelist, $6.instruct);
+		  															$$.nextlist = merge($3.falselist, $7.nextlist);
+		  														}
+
+		  | IF LP BoolExp RP M_NewIfScope M_BP Statement M_CloseIfScope ELSE M_NewIfScope N_BP M_BP Statement M_CloseIfScope  	{
+		  															bp($3.truelist, $6.instruct);
+		  															bp($3.falselist, $12.instruct);
+		  															$$.nextlist = merge( merge($7.nextlist, $11.nextlist), $13.nextlist);
+		  														}
+
+		  | WHILE LP M_BP BoolExp RP M_NewWhileScope M_BP Statement M_CloseWhileScope	{
+		  															bp($8.nextlist, $3.instruct);
+		  															bp($4.truelist, $7.instruct);
+		  															$$.nextlist = $4.falselist;
+
+		  															ostringstream stream;
+																	stream << "goto " << $3.instruct;
+																	emit(stream.str());
+		  														}
+
 		  | BREAK SC 											{
 		  															if(inWhileDepth == 0){
 		  																errorUnexpectedBreak(yylineno);
@@ -205,6 +232,9 @@ BoolExp : Exp													{
 		  																errorMismatch(yylineno);
 			  															exit(1);
 			  														}
+
+			  														$$.truelist = $1.truelist;
+			  														$$.falselist = $1.falselist;
 																};
 
 CasesList : CaseStat CasesList 									{}
@@ -219,6 +249,18 @@ TemperatureType : CELSIUS 										{$$.type = $1.type;}
 Type : TemperatureType											{$$.type = $1.type;}
 	 | INT 														{$$.type = $1.type;}
 	 | BOOL 													{$$.type = $1.type;};
+
+M_BP : 															{
+																	$$.instruct = next();
+																};
+
+N_BP :															{
+																	$$.nextlist = makelist(next());
+
+																	ostringstream stream;
+																	stream << "goto ";
+																	emit(stream.str());
+																};
 
 M_NewScope : 													{
 																	magicScopes.push_front(false);
@@ -262,7 +304,16 @@ M_CloseWhileScope : 											{
 																	inWhileDepth--;
 																};
 
-Exp : LP Exp RP 												{$$.type = $2.type;}
+Exp : LP Exp RP 												{
+																	$$.type = $2.type;
+																	if($2.type != BOOL_T){
+																		$$.place = $2.place;
+																	} else {
+																		$$.truelist = $2.truelist;
+																		$$.falselist = $2.falselist;
+																	}
+																}
+
     | Exp PLUS Exp												{
     																ostringstream stream;
     																if($1.type == INT_T && $3.type == INT_T){
@@ -285,6 +336,7 @@ Exp : LP Exp RP 												{$$.type = $2.type;}
 			  															exit(1);
     																}
     															}
+
     | Exp MINUS Exp												{
     																ostringstream stream;
     																if($1.type == INT_T && $3.type == INT_T){
@@ -295,7 +347,7 @@ Exp : LP Exp RP 												{$$.type = $2.type;}
     																	$$.type = $1.type;
     																}
     																else if(isTemperature($1.type) && isTemperature($3.type)){
-    																	//add and possibly convert types
+    																	//subtract and possibly convert types
     																	string newPlace = convertValue($1.type,$3.type,$3.place); 
     																	$$.place = newTemp();
     																	stream << $$.place << "=" << $1.place << "-" << newPlace;
@@ -307,6 +359,7 @@ Exp : LP Exp RP 												{$$.type = $2.type;}
 			  															exit(1);
     																}
     															}
+
     | Exp MULT Exp												{
     																ostringstream stream;
     																if(isTemperature($1.type) && isTemperature($3.type)){
@@ -339,6 +392,7 @@ Exp : LP Exp RP 												{$$.type = $2.type;}
 			  															exit(1);
     																}
     															}
+
     | Exp DIV Exp												{
         															ostringstream stream;
     																if(isTemperature($1.type) && isTemperature($3.type)){
@@ -373,17 +427,32 @@ Exp : LP Exp RP 												{$$.type = $2.type;}
 			  															exit(1);
     																}
     															}
+
 	| ID														{
 																	if(st.contains($1.id)){
+
 																		//assign values...
 																		$$.place = st.getPlace($1.id);
 																		$$.type = st.find($1.id);
+
+																		if ($$.type == BOOL_T){
+																			$$.truelist = makelist(next());
+																			ostringstream stream_t;
+																			stream_t << "if " << $$.place << "==" << 1 <<" goto ";
+																			emit(stream_t.str());
+
+																			$$.falselist = makelist(next());
+																			ostringstream stream_f;
+										   									stream_f << "if " << $$.place << "==" << 0 <<" goto ";
+										   									emit(stream_f.str());
+																		}
 																	}
 																	else{
 																		errorUndef(yylineno,$1.id.c_str());
 		  																exit(1);
 																	}
 																}
+
 	| NUM														{
 																	ostringstream stream;
 																	$$.place = newTemp();
@@ -391,6 +460,7 @@ Exp : LP Exp RP 												{$$.type = $2.type;}
 																	emit(stream.str());
 																	$$.type = INT_T;
 																}
+
 	| NUM TemperatureType										{
 																	ostringstream stream;
 																	$$.place = newTemp();
@@ -398,19 +468,25 @@ Exp : LP Exp RP 												{$$.type = $2.type;}
 																	emit(stream.str());
 																	$$.type = $2.type;
 																}
+
 	| TRUE														{
-																	ostringstream stream;
-																	$$.place = newTemp();
-																	stream << $$.place << "=1";
-																	emit(stream.str());
 																	$$.type = $1.type;
-																}
-	| FALSE														{	
+
+																	$$.truelist = makelist(next());
 																	ostringstream stream;
-																	$$.place = newTemp();
-																	stream << $$.place << "=0";
+																	stream << "goto ";
 																	emit(stream.str());
-																	$$.type = $1.type;}
+																}
+
+	| FALSE														{	
+																	$$.type = $1.type;
+
+																	$$.falselist = makelist(next());
+																	ostringstream stream;
+																	stream << "goto ";
+																	emit(stream.str());
+																}
+
 	| NOT Exp													{
 																	if($2.type == BOOL_T){
 																		// assign value...
@@ -421,29 +497,39 @@ Exp : LP Exp RP 												{$$.type = $2.type;}
 																		errorMismatch(yylineno);
 			  															exit(1);
 																	}
+
+																	$$.truelist = $2.falselist;
+																	$$.falselist = $2.truelist;
 																}
-	| Exp OR Exp												{
-																	if($1.type == BOOL_T && $3.type == BOOL_T){
-																		// assign value...
-																		//$$.boolean = $1.boolean || $3.boolean;
+
+	| Exp OR M_BP Exp												{
+																	if($1.type == BOOL_T && $4.type == BOOL_T){
 																		$$.type = BOOL_T;
 																	}
 																	else{
 																		errorMismatch(yylineno);
 			  															exit(1);
 																	}
+																	
+																	bp($1.falselist, $3.instruct);
+																	$$.truelist = merge($1.truelist, $4.truelist);
+																	$$.falselist = $4.falselist;
 																}
-	| Exp AND Exp												{
-																	if($1.type == BOOL_T && $3.type == BOOL_T){
-																		// assign value...
-																		//$$.boolean = $1.boolean && $3.boolean;
+
+	| Exp AND M_BP Exp											{
+																	if($1.type == BOOL_T && $4.type == BOOL_T){
 																		$$.type = BOOL_T;
 																	}
 																	else{
 																		errorMismatch(yylineno);
 			  															exit(1);
 																	}
+
+																	bp($1.truelist, $3.instruct);
+																	$$.truelist = $4.truelist;
+																	$$.falselist = merge($1.falselist, $4.falselist);
 																}
+
 	| Exp REL_OP Exp											{
 																	if(isTemperature($1.type) && isTemperature($3.type)){
     																	//choose bool value...
@@ -457,6 +543,43 @@ Exp : LP Exp RP 												{$$.type = $2.type;}
     																	errorMismatch(yylineno);
 			  															exit(1);
     																}
+
+    													
+																	if (!$2.rel_op.compare(">=") || !$2.rel_op.compare("<=")){
+
+																		string rel_op_second;
+																		if(!$2.rel_op.compare(">=")){
+																			rel_op_second = ">";
+																		} else if(!$2.rel_op.compare("<=")) {
+																			rel_op_second = "<";
+																		}
+
+
+																		list<int> truelist1 = makelist(next());
+																		list<int> truelist2 = makelist(next()+1);
+																		$$.truelist = merge(truelist1, truelist2);
+																		$$.falselist = makelist(next()+2);
+
+																		ostringstream stream_1;
+																		stream_1 << "if " << $1.place << rel_op_second << $3.place << " goto ";
+																		emit(stream_1.str());
+																		
+																		ostringstream stream_2;
+																		stream_2 << "if " << $1.place << "==" << $3.place << " goto ";
+																		emit(stream_2.str());
+
+																	} else {
+																		$$.truelist = makelist(next());
+	    																$$.falselist = makelist(next()+1);
+
+																		ostringstream stream;
+																		stream << "if " << $1.place << $2.rel_op << $3.place << " goto ";
+																		emit(stream.str());
+																	}
+																	
+																	ostringstream stream;
+																	stream << "goto ";
+																	emit(stream.str());
 																};
 
 %%
@@ -594,38 +717,6 @@ string convertValue(Type t1 , Type t2 , string place){
 	}
 }
 
-/*void relOp( Type t1 ,int num1, Type t2 , int num2 , string rel_op){
-	int rVal;
-	
-	if(t1 == INT_T && t2 == INT_T){
-		rVal = num2;
-	}
-	else if(isTemperature(t1) && isTemperature(t2)){
-		rVal = getValue(t1,t2,num2);	
-	}
-	else{
-		// DO NOT GET HERE!!!
-	}
-
-	if(rel_op.compare("<=")){
-		return num1 <= rVal;
-	}
-	else if(rel_op.compare(">=")){
-		return num1 >= rVal;
-	}
-	else if(rel_op.compare("==")){
-		return num1 == rVal;
-	}
-	else if(rel_op.compare("!=")){
-		return num1 != rVal;
-	}
-	else if(rel_op.compare(">")){
-		return num1 > rVal;
-	}
-	else if(rel_op.compare("<")){
-		return num1 < rVal;
-	}
-}*/
 
 int main()
 {

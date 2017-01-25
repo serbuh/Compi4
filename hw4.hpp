@@ -1,6 +1,6 @@
 
 #include <string>
-
+#include <list>
 
 
 typedef enum {CELSIUS_T, FAHRENHEIT_T, KELVIN_T, BOOL_T, INT_T, STRING_T} Type;
@@ -16,7 +16,12 @@ typedef struct{
 	
 	std::string rel_op;
 	std::string place;
-	//int lineNum;
+
+	std::list<int> truelist;
+	std::list<int> falselist;
+	std::list<int> nextlist;
+	int instruct;
+
 
 }Var;
 
