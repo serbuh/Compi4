@@ -20,6 +20,7 @@ typedef struct{
 	std::list<int> truelist;
 	std::list<int> falselist;
 	std::list<int> nextlist;
+	std::list<int> breaklist;
 	int instruct;
 
 

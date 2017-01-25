@@ -62,16 +62,19 @@ Prog : M_NewScope Statements M_CloseScope						{};
 Statements : Statements Statement M_BP							{
 																	bp($2.nextlist, $3.instruct);
 																	$$.nextlist = $3.nextlist;
+																	$$.breaklist = merge($1.breaklist, $2.breaklist);
 																}
 
 		   | Statement M_BP				  						{
 		   															bp($1.nextlist, $2.instruct);
 		   															$$.nextlist = $1.nextlist;
+		   															$$.breaklist = $1.breaklist;
 		   														};
 
 
 Statement : LC M_NewScope Statements RC M_CloseScope			{
 																	$$.nextlist = $3.nextlist;
+																	$$.breaklist = $3.breaklist;
 																}
 
 		  | Type ID SC 											{
@@ -117,6 +120,7 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{
 																		}
 																	}	
 		  														}
+
 		  | ID ASSIGN Exp SC 									{
 		  															if(st.contains($1.id)){
 		  																ostringstream stream;
@@ -147,6 +151,7 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{
 		  																exit(1);
 		  															}
 		  														}
+
 		  | PRINT ID SC 										{
 		  															if(st.contains($2.id)){
 		  																Type type = st.find($2.id);
@@ -165,11 +170,13 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{
 		  																exit(1);
 		  															}
 		  														}
+
 		  | PRINT STRING SC 									{
 		  															ostringstream stream;
 		  															stream << "print " << $2.string;
 		  															emit(stream.str());
 		  														}
+
 		  | INPUT ID SC 										{
 		  															if(st.contains($2.id)){
 		  																ostringstream stream;
@@ -189,21 +196,24 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{
 		  																exit(1);
 		  															}	
 		  														}
+
 		  | IF LP BoolExp RP M_NewIfScope M_BP Statement M_CloseIfScope	{ 
 		  															bp($3.truelist, $6.instruct);
 		  															$$.nextlist = merge($3.falselist, $7.nextlist);
+		  															$$.breaklist = $7.breaklist;
 		  														}
 
 		  | IF LP BoolExp RP M_NewIfScope M_BP Statement M_CloseIfScope ELSE M_NewIfScope N_BP M_BP Statement M_CloseIfScope  	{
 		  															bp($3.truelist, $6.instruct);
 		  															bp($3.falselist, $12.instruct);
 		  															$$.nextlist = merge( merge($7.nextlist, $11.nextlist), $13.nextlist);
+		  															$$.breaklist = merge( $7.breaklist, $13.breaklist);
 		  														}
 
 		  | WHILE LP M_BP BoolExp RP M_NewWhileScope M_BP Statement M_CloseWhileScope	{
 		  															bp($8.nextlist, $3.instruct);
 		  															bp($4.truelist, $7.instruct);
-		  															$$.nextlist = $4.falselist;
+		  															$$.nextlist = merge( $4.falselist, $8.breaklist);
 
 		  															ostringstream stream;
 																	stream << "goto " << $3.instruct;
@@ -215,15 +225,23 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{
 		  																errorUnexpectedBreak(yylineno);
 		  																exit(1); 
 		  															}
+		  															$$.breaklist = makelist(next());	
+																	emit("goto ");
 		  														}
-		  | SWITCH LP TempExp RP LC CasesList RC 				{}
+
+		  | SWITCH LP SwitchExp RP LC CasesList RC 				{
+		  															//TODO
+		  														}
+
 		  | COMMENT												{};
 
-TempExp : Exp													{
+SwitchExp : Exp													{
 																	if(!isTemperature($1.type)){
 																		errorMismatch(yylineno);
 																		exit(1);
 			  														}
+			  														
+			  														$$.place = $1.place;
 																};
 
 
@@ -237,10 +255,16 @@ BoolExp : Exp													{
 			  														$$.falselist = $1.falselist;
 																};
 
-CasesList : CaseStat CasesList 									{}
-		  | CaseStat 											{};
+CasesList : CaseStat CasesList 									{
+																	//TODO
+																}
+		  | CaseStat 											{
+		  															//TODO
+		  														};
 
-CaseStat : CASE NUM TemperatureType COLON M_NewCaseScope Statement BREAK SC M_CloseCaseScope	{};
+CaseStat : CASE NUM TemperatureType COLON M_NewCaseScope Statement BREAK SC M_CloseCaseScope	{
+																	//TODO
+																};
 
 TemperatureType : CELSIUS 										{$$.type = $1.type;}
 			   | FAHRENHEIT										{$$.type = $1.type;}
