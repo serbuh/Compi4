@@ -1,0 +1,4 @@
+// Simple if statement
+if(3>2) {
+	print "Good";
+}

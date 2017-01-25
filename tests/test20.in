@@ -1,0 +1,14 @@
+// While statement with break
+
+C x = 0 C;
+print "Water is frozen";
+
+while(x < 200 C) {
+  x = x + 20 C;
+  print "Warming up water...";
+  if(x == 100 C) {
+    print "Water is boiling, cannot warm up";
+    break;
+  }
+}
+print "Water boiling complete!";

@@ -1,0 +1,6 @@
+//While infinite loop
+while(true) {
+  C x = 100 C;
+}
+
+print "This shouldn't be printed";

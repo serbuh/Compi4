@@ -1,0 +1,7 @@
+// Foreach with uninitialized variable
+int count;
+
+K k = 100 K;
+foreach(count K) + 100;
+
+print k;

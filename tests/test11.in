@@ -1,0 +1,14 @@
+// Switch case with identical branches
+K x = 100 K;
+
+switch(x) {
+  case 100 K:
+    print "Pass";
+    break;
+  case 100 K:
+    print "This shouldn't be printed #1";
+    break;
+  case 80 K:
+    print "This shouldn't be printed #2";
+    break;
+}

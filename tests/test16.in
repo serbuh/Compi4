@@ -1,0 +1,19 @@
+// Simple boolean expressions
+bool a = true;
+bool b = false;
+
+if(a or b) {
+  print "Pass 1";
+}
+
+if(a and b) {
+  print "This shouldn't be printed #1";
+}
+
+if(not b) {
+  print "Pass 2";
+}
+
+if(a and not b) {
+  print "Pass 3";
+}

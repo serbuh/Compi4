@@ -1,0 +1,29 @@
+// Using lte/gte/neq operators
+
+K x = 300 K;
+F y = 150 F;
+C z = 27 C; // Equals 300K
+
+if(y>=x) {
+  print "Pass 1";
+}
+
+if(y<=x) {
+  print "This shouldn't be printed #1";
+}
+
+if(x>=z) {
+  print "Pass 2";
+}
+
+if(x!=z) {
+  print "This shouldn't be printed #2";
+}
+
+if(x<=z) {
+  print "Pass 3";
+}
+
+if(x!=y) {
+  print "Pass 4";
+}

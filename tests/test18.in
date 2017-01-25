@@ -1,0 +1,8 @@
+// Simple while statement
+int i = 0;
+
+while(i < 4) {
+  print "This should appear 4 times";
+  i = i + 1;
+}
+print "End of while";

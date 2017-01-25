@@ -1,0 +1,96 @@
+// Final test - encompassing everything in the grammar, including input
+
+C Haifa_Winter = 9 C;
+C Haifa_Spring = 21 C;
+C Haifa_Summer = 34 C;
+C Haifa_Autumn = 27 C;
+
+F NY_Winter = 28 F;
+F NY_Spring = 59 F;
+F NY_Summer = 86 F;
+F NY_Autumn = 68 F;
+
+print "Welcome to the Global Warming Simulator v1.0";
+
+while(true) {
+  int run;
+  print "Would you like to continue? (1 = Yes, 0 = No)";
+  input run;
+  if(run == 0) {
+    break;
+  }
+
+  int city;
+  print "Where do you live? (0 = Haifa, 1 = NY)";
+  input city;
+
+  if(city == 0) {
+    print "You live in Haifa";
+    print "The temperatures in 2017 are (Celsius):";
+    print "Winter:";
+    print Haifa_Winter;
+    print "Spring:";
+    print Haifa_Spring;
+    print "Summer:";
+    print Haifa_Summer;
+    print "Autumn:";
+    print Haifa_Autumn;
+
+    print "Type in a year (2018-2100):";
+    int year;
+    input year;
+
+    print "Computing the temperatures";
+    int period = year - 2017;
+    print period;
+    print "years in the future:";
+
+    int iterations = period/8;
+    foreach(iterations C) + 1;
+
+    print "The temperatures in the future will be:";
+    print "Winter:";
+    print Haifa_Winter;
+    print "Spring:";
+    print Haifa_Spring;
+    print "Summer:";
+    print Haifa_Summer;
+    print "Autumn:";
+    print Haifa_Autumn;
+  }
+
+  if(city == 1) {
+    print "You live in New York";
+    print "The temperatures there (Celsius):";
+    C temp;
+    print "Winter:";
+    temp = NY_Winter;
+    print temp;
+
+    print "Spring:";
+    temp = NY_Spring;
+    print temp;
+
+    print "Summer:";
+    temp = NY_Summer;
+    print temp;
+
+    print "Autumn:";
+    temp = NY_Autumn;
+    print temp;
+
+    print "We do not support temperature extrapolations for the US";
+    print "Clear the screen? (1 = Yes, 0 = No)";
+    int clear;
+    input clear;
+    if(clear == 1) {
+      int j = 40;
+      while(j > 0) {
+        j = j - 1;
+        print "";
+      }
+    }
+  }
+}
+
+print "Thanks for playing, and may we all live to see the future";

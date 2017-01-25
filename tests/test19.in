@@ -1,0 +1,14 @@
+// Nested while
+
+int i = 8;
+while(i > 0) {
+  while(i > 0) {
+    while(i > 0) {
+      print i;
+      i = i - 1;
+    }
+    print "End of inner-most while";
+  }
+  print "End of middle while";
+}
+print "End of outer-most while";

@@ -1,0 +1,15 @@
+// Switch statement with type conversion from ID
+
+F x = 212 F;
+
+switch(x) {
+  case 1000 K:
+    print "This shouldn't be printed";
+    break;
+  case 100 C:
+    print "Pass";
+    break;
+  case 212 F:
+    print "Your switch statement doesn't convert temperatures correctly, or you need to reverse the order";
+    break;
+}

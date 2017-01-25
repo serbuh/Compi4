@@ -1,0 +1,6 @@
+// More compound assignments with conversions
+F val = 20 C + 350 K + 3*12 C - 40 F;
+print val;
+
+int n = 12 + (52*(12 - 44/11) - 13)*3/3 - 15;
+print n;

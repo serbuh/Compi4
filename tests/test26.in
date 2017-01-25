@@ -1,0 +1,15 @@
+// Nested loops of different kinds
+
+int count = 100;
+K k = 100 K;
+C c = 100 C;
+
+while(count > 0) {
+  while(false) {
+    foreach(count K) + 1;
+  }
+  foreach(count C) + 1;
+  break;
+}
+print k;
+print c;

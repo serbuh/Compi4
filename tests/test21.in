@@ -1,0 +1,13 @@
+// Dead while statements
+while(false) {
+  print "Shouldn't be printed #1";
+}
+
+C x = 100 C;
+C y = 200 F;
+
+while(x == y) {
+  print "Shouldn't be printed #2";
+}
+
+print "Only this line should be printed";

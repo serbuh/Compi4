@@ -1,0 +1,22 @@
+// Blend of control structures
+
+C x = 100 C;
+F y = 100 F;
+K z = 100 C;
+
+if(x==z) {
+  print "In first if - Good";
+  if(z==x) {
+    print "In second if - Good";
+    int i = 5;
+    while(i > 0) {
+      y = y + 10 F;
+      i = i - 1;
+      while(x==x) {
+        break;
+      }
+    }
+  }
+}
+
+print y;

@@ -1,0 +1,21 @@
+// Declaration and assignments with computations
+
+K x;
+C y = 20 C;
+F z = 500 K;
+x = 50 F;
+
+C v = x + y + 50 F;
+C vv = v + z/2;
+
+K xx;
+K yy;
+xx = x*5;
+yy = y*5;
+C zz = xx + yy;
+
+print v;
+print vv;
+print xx;
+print yy;
+print zz;

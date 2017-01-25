@@ -1,0 +1,9 @@
+// Switch statement with computation
+switch((100 C + 25 C)*3 + 15 C) {
+  case 100 C:
+    print "This shouldn't be printed";
+    break;
+  case 390 C:
+    print "Pass";
+    break;
+}

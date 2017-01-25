@@ -1,0 +1,13 @@
+// Switch statement with type conversion from explicit expression
+
+switch(273 K) {
+  case 50 K:
+    print "This shouldn't be printed #1";
+    break;
+  case 0 C:
+    print "Pass";
+    break;
+  case 273 K:
+    print "Your switch statement doesn't convert types correctly!";
+    break;
+}

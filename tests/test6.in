@@ -1,0 +1,7 @@
+// Compound assignment
+K x = 300 K;
+K y = 200 K;
+F z = 200 F;
+
+C res = x + y + z;
+print res;

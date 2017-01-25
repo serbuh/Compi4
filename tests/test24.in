@@ -1,0 +1,10 @@
+// Simple foreach statement
+K x = 100 K;
+K y = 200 K;
+C z = 0 C;
+int i = 8;
+
+foreach(i K) + 10;
+print x;
+print y;
+print z;

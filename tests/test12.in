@@ -1,0 +1,14 @@
+// Switch case where the expression is an ID
+
+K x = 200 K;
+switch(x) {
+  case 100 K:
+    print "This shouldn't be printed #1";
+    break;
+  case 200 K:
+    print "Pass";
+    break;
+  case 300 K:
+    print "This shouldn't be printed #2";
+    break;
+}

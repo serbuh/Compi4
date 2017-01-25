@@ -1,0 +1,12 @@
+// Simple switch case
+switch(100 C) {
+  case 50 C:
+    print "This shouldn't print #1";
+    break;
+  case 100 C:
+    print "Pass";
+    break;
+  case 75 C:
+    print "This shouldn't print #2";
+    break;
+}

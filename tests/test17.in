@@ -1,0 +1,51 @@
+// Complex boolean expressions
+bool a = (3<7) and (true or true or true);
+bool b = (300 K == 27 C);
+bool c = true or false or false or false;
+bool d = (22*55 + 8)!=12 and true;
+
+if(a) {
+  print "Pass 1";
+} else {
+  print "This shouldn't be printed #1";
+}
+
+if(b) {
+  print "Pass 2";
+}
+
+if(not c) {
+  print "This shouldn't be printed #2";
+} else {
+  print "Pass 3";
+}
+
+if(d) {
+  print "Pass 4";
+} else {
+  print "This shouldn't be printed #3";
+}
+
+if(false or false or true) {
+  print "Pass 5";
+} else {
+  print "This shouldn't be printed #4";
+}
+
+if(16>15 or (200 K != 150 K and 16 C >= 16 C)) {
+  print "You're awesome!";
+} else {
+  print "This shouldn't be printed #5";
+}
+
+if (true or (true and (false or true or false and (2>1)))) {
+  print "You're awesome 2!";
+} else {
+  print "This shouldn't be printed #6";
+}
+
+if((5*6*7 + 2) > 1000) {
+  print "This shouldn't be printed #7";
+} else {
+  print "Hooray!";
+}

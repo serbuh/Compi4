@@ -1,0 +1,14 @@
+// Foreach with uninitialized variables
+
+int count = 10;
+
+C c;
+C d;
+C e;
+F g;
+
+foreach(count C) + 10;
+
+print c;
+print d;
+print e;

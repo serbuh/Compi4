@@ -1,0 +1,15 @@
+if(true) {
+  print "Pass 1";
+} else {
+  print "This shouldn't be printed #1";
+}
+if(true) {
+  print "Pass 2";
+} else {
+  print "This shouldn't be printed #1";
+}
+if(true) {
+  print "Pass 3";
+} else {
+  print "This shouldn't be printed #1";
+}

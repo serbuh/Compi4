@@ -1,0 +1,9 @@
+// Simple conversions test
+C x = 100 C;
+F y = 100 C;
+
+K z = x + y;
+print x;
+print y;
+print z;
+print "The end";

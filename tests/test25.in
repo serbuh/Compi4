@@ -1,0 +1,25 @@
+// Foreach with computation and multiple use of the same counter
+
+int count = (3 + 5*3)/9 + 11; //
+C c_a = 100 C;
+C c_b = 200 C;
+F f_a = 100 F;
+F f_b = 200 F;
+K k_a = 100 K;
+K k_b = 200 K;
+
+foreach(count C) + 20;
+print c_a;
+print c_b;
+print f_a;
+print f_b;
+print k_a;
+print k_b;
+
+foreach(count K) - 5;
+print c_a;
+print c_b;
+print f_a;
+print f_b;
+print k_a;
+print k_b;

@@ -1,0 +1,34 @@
+// Simple assignments and if statements
+
+K x = 300 K;
+C y = 100 C;
+
+if(true) {
+  print "Pass 1";
+}
+
+if(false) {
+  print "This shouldn't be printed #1";
+}
+
+if(x<y) {
+  print "Pass 2";
+}
+
+if(5<12) {
+  print "Pass 3";
+}
+
+if(4>4) {
+  print "This shouldn't be printed #2";
+}
+
+if (300 K < 500 K) {
+  print "Pass 4";
+}
+
+int i = 8;
+
+if(i == 8) {
+  print "Pass 5";
+}
