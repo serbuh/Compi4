@@ -94,8 +94,27 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{
 			  															if($1.type == INT_T || $1.type == BOOL_T){
 																			if($1.type == $4.type){
 																				st.addElement($2.id,getType($1.type),newTemp());
-																				stream << st.getPlace($2.id) << "=" << $4.place;	
-																				emit(stream.str());
+																				
+																				if ($1.type == INT_T){
+																					stream << st.getPlace($2.id) << "=" << $4.place;	
+																					emit(stream.str());
+																				} else if ($1.type == BOOL_T) {
+
+																					bp($4.truelist, next());
+																					stream << st.getPlace($2.id) << "=" << 1;
+																					emit(stream.str());
+
+																					stream.str("");
+																					stream << "goto " << next() + 2;
+																					emit(stream.str());
+
+																					bp($4.falselist, next());
+																					stream.str("");
+																					stream << st.getPlace($2.id) << "=" << 0;
+																					emit(stream.str());
+
+																				}
+
 																			}
 																			else{
 																				errorMismatch(yylineno);
@@ -120,12 +139,32 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{
 
 		  | ID ASSIGN Exp SC 									{
 		  															if(st.contains($1.id)){
-		  																ostringstream stream;
-		  																stream << st.getPlace($1.id) << "=";
+		  																
 		  																Type type = st.find($1.id);
+		  																ostringstream stream;
 																		if(type == INT_T || type == BOOL_T){
 																			if(type == $3.type){
-																				stream << $3.place;
+																				if(type == INT_T){
+		  																			stream << st.getPlace($1.id) << "=";
+																					stream << $3.place;
+																					emit(stream.str());
+
+																				} else if(type == BOOL_T){
+
+																					bp($3.truelist, next());
+																					stream << st.getPlace($1.id) << "=" << 1;
+																					emit(stream.str());
+
+																					stream.str("");
+																					stream << "goto " << next() + 2;
+																					emit(stream.str());
+
+																					bp($3.falselist, next());
+																					stream.str("");
+																					stream << st.getPlace($1.id) << "=" << 0;
+																					emit(stream.str());
+
+																				}
 																			}
 																			else{
 																				errorMismatch(yylineno);
@@ -138,10 +177,11 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{
 			  																	exit(1);
 																			}
 																			else{
+		  																		stream << st.getPlace($1.id) << "=";
 																				stream << convertValue(type, $3.type, $3.place);
+																				emit(stream.str());
 																			}
 																		}
-																		emit(stream.str());
 		  															}
 		  															else{
 		  																errorUndef(yylineno,$1.id.c_str());
