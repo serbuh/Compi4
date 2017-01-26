@@ -40,7 +40,7 @@
 %}
 
 %token INT STRING TRUE FALSE NUM CASE LP RC COLON SC LC COMMENT
-%token CELSIUS FAHRENHEIT KELVIN PRINT INPUT ID IF WHILE BREAK BOOL SWITCH 
+%token CELSIUS FAHRENHEIT KELVIN PRINT INPUT ID IF WHILE BREAK BOOL SWITCH FOREACH
 
 %nonassoc RP
 %right ELSE
@@ -80,7 +80,7 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{
 		  																exit(1);
 		  															}
 		  															else{
-		  																st.addElement($2.id,getType($1.type),newTemp());
+		  																st.addElement($2.id,getType($1.type),newTemp(),false);
 		  															}
 		  														}
 
@@ -93,7 +93,7 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{
 		  																ostringstream stream;
 			  															if($1.type == INT_T || $1.type == BOOL_T){
 																			if($1.type == $4.type){
-																				st.addElement($2.id,getType($1.type),newTemp());
+																				st.addElement($2.id,getType($1.type),newTemp(),true);
 																				
 																				if ($1.type == INT_T){
 																					stream << st.getPlace($2.id) << "=" << $4.place;	
@@ -128,7 +128,7 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{
 																			}
 																			else{
 																				// add value + type conversion if needed
-																				st.addElement($2.id,getType($1.type), newTemp());
+																				st.addElement($2.id,getType($1.type), newTemp(),true);
 																				stream << st.getPlace($2.id) << "=";
 																				stream << convertValue($1.type, $4.type, $4.place); 
 																				emit(stream.str());
@@ -163,7 +163,6 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{
 																					stream.str("");
 																					stream << st.getPlace($1.id) << "=" << 0;
 																					emit(stream.str());
-
 																				}
 																			}
 																			else{
@@ -182,6 +181,8 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{
 																				emit(stream.str());
 																			}
 																		}
+																		// initialize flag up
+																		st.setInit($1.id);
 		  															}
 		  															else{
 		  																errorUndef(yylineno,$1.id.c_str());
@@ -286,6 +287,94 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{
 		  															$$.breaklist = $7.breaklist;
 		  															emit("goto ");
 		  														}
+
+		  | FOREACH LP ID TemperatureType RP PLUS Exp SC 		{	
+
+		  															// Check if ID declared
+		  															if(!st.contains($3.id)){
+																		errorUndef(yylineno,$3.id.c_str());
+		  																exit(1);
+																	}
+																	
+																	string id_place = st.getPlace($3.id);
+																	Type id_type = st.find($3.id);
+																	
+																	// Check id type is INT
+																	if(id_type != INT_T){
+		  																errorMismatch(yylineno);
+			  															exit(1);
+			  														}
+
+																	// init id to 2 if not initilized
+			  														if(!st.isInit($3.id)){
+			  															ostringstream stream;
+			  															stream << st.getPlace($3.id) << "=2";
+																		emit(stream.str());
+			  															st.setInit($3.id);
+			  														}
+
+			  														// Create list of values of TemperatureType
+			  														list<tableElement> listValOfType= st.getElementsOfType($4.type);
+
+			  														// Iterate over a list of values of TemperatureType and do OP EXP id times
+			  														for (list<tableElement>::iterator it = listValOfType.begin(); it != listValOfType.end(); it++){
+																		string elem_place = (get<3>(*it));
+																		string exp_place = $7.place;
+
+																		// Generate the OP EXP (xID times) block
+																		ostringstream stream;
+/*
+																		// counter = 0
+																		string counter_place = newTemp();
+																		stream << counter_place << "=0";
+																		emit(stream.str());
+																		stream.str("");
+
+																		//if:
+																		if_lbl = next();
+*/
+																		int id_num = 8;
+																		for (int i=0; i < id_num; i++){
+																			ostringstream stream;
+																			stream << elem_place << "=" << elem_place << "+" << exp_place;
+																			emit(stream.str());
+																		}
+																		
+																	}
+
+
+
+/*
+		// iterate over all variables and 
+		list<Symbol>::iterator it_var = vars.begin();
+		int iteration_num = stoi(id_value);
+		for(;it_var !=vars.end(); it_var++){
+			if(!it_var->isInit){
+				emit(it_var->place+"=0");
+				it_var->isInit=true;
+			}
+
+			// do OP EXP id times
+			for(int i=0;i < iteration_num;i++){
+				// check if this works: -------------------------------------------
+				emit( it_var->place + "=" + it_var->place + op + exp_place );
+			}
+		}
+*/
+
+																};
+
+		  | FOREACH LP ID TemperatureType RP MINUS Exp SC 		{	
+																	emit("FOREEEEEECH");
+																};
+
+		  | FOREACH LP ID TemperatureType RP MULT Exp SC 		{	
+																	emit("FOREEEEEECH");
+																};
+
+		  | FOREACH LP ID TemperatureType RP DIV Exp SC 		{	
+																	emit("FOREEEEEECH");
+																};
 
 		  | COMMENT												{};
 
@@ -524,7 +613,6 @@ Exp : LP Exp RP 												{
 	| ID														{
 																	if(st.contains($1.id)){
 
-																		//assign values...
 																		$$.place = st.getPlace($1.id);
 																		$$.type = st.find($1.id);
 

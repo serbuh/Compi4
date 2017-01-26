@@ -12,7 +12,7 @@
 using namespace output;
 using namespace std;
 
-typedef tuple<string, int, string, string> tableElement;
+typedef tuple<string, int, string, string, bool> tableElement;
 typedef list<tableElement> table;
 typedef list<table> Tables;
 typedef list<int> Offsets;
@@ -35,10 +35,10 @@ public:
   }
 
 	//Adds an element to the top table on the tables stack
-	void addElement(string id,string type,string place){
+	void addElement(string id,string type,string place, bool isInit){
 		//std::cout << id;
 		int offset = offsets.front();
-		tableElement newElement(id , offset , type , place);
+		tableElement newElement(id , offset , type , place, isInit);
 		tables.front().push_back(newElement);
 		offsets.pop_front();
 		offsets.push_front(offset + 1);
@@ -84,7 +84,7 @@ public:
 			for (table::iterator elem = (*table).begin(); elem != (*table).end(); elem++){
 				string cuurentId(get<0>(*elem));
 				if (cuurentId == id)
-					return type2Enum(get<2>(*elem));
+					return string2type(get<2>(*elem));
 			}
 		}
 		// never will happen - I hope...
@@ -103,7 +103,45 @@ public:
 		return "FUCK!!";	
 	}
 
-	Type type2Enum(string type){
+	void setInit(string id){
+		string id2search(id);
+		for (Tables::iterator table = tables.begin(); table != tables.end(); table++){
+			for (table::iterator elem = (*table).begin(); elem != (*table).end(); elem++){
+				string cuurentId(get<0>(*elem));
+				if (cuurentId == id2search)
+					get<4>(*elem) = true;
+			}
+		}
+	}
+
+	bool isInit(string id){
+		string id2search(id);
+		for (Tables::iterator table = tables.begin(); table != tables.end(); table++){
+			for (table::iterator elem = (*table).begin(); elem != (*table).end(); elem++){
+				string cuurentId(get<0>(*elem));
+				if (cuurentId == id2search)
+					return get<4>(*elem);
+			}
+		}
+		// should not happen if id exists
+		return false;
+	}
+
+	list<tableElement> getElementsOfType(Type type){
+		list<tableElement> list;
+		for (Tables::iterator table = tables.begin(); table != tables.end(); table++){
+			for (table::iterator elem = (*table).begin(); elem != (*table).end(); elem++){
+				Type cuurentType = string2type(get<2>(*elem));
+				if (cuurentType == type)
+					list.push_front(*elem);
+			}
+		}
+		return list;
+	}
+
+	
+
+	Type string2type(string type){
 		if(type == "CELSIUS")
 			return CELSIUS_T;
 		else if(type == "FAHRENHEIT")

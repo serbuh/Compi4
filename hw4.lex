@@ -51,6 +51,7 @@ NUM 			([1-9][0-9]*|0)
 SWITCH 			(switch)
 CASE 			(case)
 COMMENT 		("\/\/"[^\n]*\n)
+FOREACH			(foreach)
 whitespace		([ \t\n])
 
 %%
@@ -66,6 +67,7 @@ whitespace		([ \t\n])
 {MINUS}				{return MINUS;}
 {MULT}				{return MULT;}
 {DIV}				{return DIV;}
+{FOREACH}			{return FOREACH;}
 {REL_OP}			{
 						yylval.rel_op = yytext;
 						return REL_OP;
