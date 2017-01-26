@@ -33,6 +33,7 @@
 	string K2F(string place);
 
 	string convertValue(Type t1 , Type t2 , string place);
+	void do_foreach(string ID_id, Type TempType, string Exp_place, string aop);
 
 	int inCaseDepth = 0;
 	int inWhileDepth = 0;
@@ -89,7 +90,7 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{
 		  																errorDef(yylineno,$2.id.c_str());
 		  																exit(1);
 		  															}
-		  															else{	
+		  															else{
 		  																ostringstream stream;
 			  															if($1.type == INT_T || $1.type == BOOL_T){
 																			if($1.type == $4.type){
@@ -128,12 +129,16 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{
 																			}
 																			else{
 																				// add value + type conversion if needed
-																				st.addElement($2.id,getType($1.type), newTemp(),true);
+																				st.addElement($2.id,getType($1.type), newTemp(), true);
 																				stream << st.getPlace($2.id) << "=";
 																				stream << convertValue($1.type, $4.type, $4.place); 
 																				emit(stream.str());
 																			}
 																		}
+																		// initialize flag up
+																		st.setInit($2.id);
+																		//cout << $2.id << " initialized = " << "(set)" << endl;
+//////////////////////////////////
 																	}	
 		  														}
 
@@ -183,6 +188,8 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{
 																		}
 																		// initialize flag up
 																		st.setInit($1.id);
+																		//cout << $1.id << " initialized = " << "(set)" << endl;
+//////////////////////////////////
 		  															}
 		  															else{
 		  																errorUndef(yylineno,$1.id.c_str());
@@ -289,91 +296,43 @@ Statement : LC M_NewScope Statements RC M_CloseScope			{
 		  														}
 
 		  | FOREACH LP ID TemperatureType RP PLUS Exp SC 		{	
-
 		  															// Check if ID declared
 		  															if(!st.contains($3.id)){
 																		errorUndef(yylineno,$3.id.c_str());
 		  																exit(1);
+																	} else {
+																		do_foreach($3.id, $4.type, $7.place, "+");
 																	}
-																	
-																	string id_place = st.getPlace($3.id);
-																	Type id_type = st.find($3.id);
-																	
-																	// Check id type is INT
-																	if(id_type != INT_T){
-		  																errorMismatch(yylineno);
-			  															exit(1);
-			  														}
-
-																	// init id to 2 if not initilized
-			  														if(!st.isInit($3.id)){
-			  															ostringstream stream;
-			  															stream << st.getPlace($3.id) << "=2";
-																		emit(stream.str());
-			  															st.setInit($3.id);
-			  														}
-
-			  														// Create list of values of TemperatureType
-			  														list<tableElement> listValOfType= st.getElementsOfType($4.type);
-
-			  														// Iterate over a list of values of TemperatureType and do OP EXP id times
-			  														for (list<tableElement>::iterator it = listValOfType.begin(); it != listValOfType.end(); it++){
-																		string elem_place = (get<3>(*it));
-																		string exp_place = $7.place;
-
-																		// Generate the OP EXP (xID times) block
-																		ostringstream stream;
-/*
-																		// counter = 0
-																		string counter_place = newTemp();
-																		stream << counter_place << "=0";
-																		emit(stream.str());
-																		stream.str("");
-
-																		//if:
-																		if_lbl = next();
-*/
-																		int id_num = 8;
-																		for (int i=0; i < id_num; i++){
-																			ostringstream stream;
-																			stream << elem_place << "=" << elem_place << "+" << exp_place;
-																			emit(stream.str());
-																		}
-																		
-																	}
-
-
-
-/*
-		// iterate over all variables and 
-		list<Symbol>::iterator it_var = vars.begin();
-		int iteration_num = stoi(id_value);
-		for(;it_var !=vars.end(); it_var++){
-			if(!it_var->isInit){
-				emit(it_var->place+"=0");
-				it_var->isInit=true;
-			}
-
-			// do OP EXP id times
-			for(int i=0;i < iteration_num;i++){
-				// check if this works: -------------------------------------------
-				emit( it_var->place + "=" + it_var->place + op + exp_place );
-			}
-		}
-*/
-
 																};
 
 		  | FOREACH LP ID TemperatureType RP MINUS Exp SC 		{	
-																	emit("FOREEEEEECH");
+																// Check if ID declared
+		  															if(!st.contains($3.id)){
+																		errorUndef(yylineno,$3.id.c_str());
+		  																exit(1);
+																	} else {
+																		do_foreach($3.id, $4.type, $7.place, "-");
+																	}
 																};
 
 		  | FOREACH LP ID TemperatureType RP MULT Exp SC 		{	
-																	emit("FOREEEEEECH");
+																	// Check if ID declared
+		  															if(!st.contains($3.id)){
+																		errorUndef(yylineno,$3.id.c_str());
+		  																exit(1);
+																	} else {
+																		do_foreach($3.id, $4.type, $7.place, "*");
+																	}
 																};
 
 		  | FOREACH LP ID TemperatureType RP DIV Exp SC 		{	
-																	emit("FOREEEEEECH");
+																	// Check if ID declared
+		  															if(!st.contains($3.id)){
+																		errorUndef(yylineno,$3.id.c_str());
+		  																exit(1);
+																	} else {
+																		do_foreach($3.id, $4.type, $7.place, "/");
+																	}
 																};
 
 		  | COMMENT												{};
@@ -899,6 +858,87 @@ string convertValue(Type t1 , Type t2 , string place){
 	}
 }
 
+//string ID_id = $3.id;
+//Type TempType = $4.type; 
+//string Exp_place = $7.place;
+
+void do_foreach(string ID_id, Type TempType, string Exp_place, string aop){ 
+	string id_place = st.getPlace(ID_id);
+	Type id_type = st.find(ID_id);
+
+	// Check id type is INT
+	if(id_type != INT_T){
+		errorMismatch(yylineno);
+		exit(1);
+	}
+
+	// init id to 2 if not initilized
+	//cout << ID_id << " initialized = " << st.isInit(ID_id) << endl;
+//////////////////////////////////
+	if(!st.isInit(ID_id)){
+		ostringstream stream;
+		stream << st.getPlace(ID_id) << "=2";
+		emit(stream.str());
+		st.setInit(ID_id);
+	}
+
+	// Create list of values of TemperatureType
+	list<tableElement> listValOfType= st.getElementsOfType(TempType);
+
+	// Iterate over a list of values of TemperatureType and do OP EXP id times
+	for (list<tableElement>::iterator it = listValOfType.begin(); it != listValOfType.end(); it++){
+		string elem_place = (get<3>(*it));
+		string elem_id = (get<0>(*it));
+
+		// Make any uninitialized elem initialized to 0
+		//cout << elem_id << " initialized = " << st.isInit(elem_id) << endl;
+//////////////////////////////////
+		if(!st.isInit(elem_id)){
+			ostringstream stream;
+			stream << elem_place << "=0";
+			emit(stream.str());
+			st.setInit(st.getPlace(elem_place));
+		}
+
+		// Generate the OP EXP (xID times) block
+		ostringstream stream;
+
+		int if_lbl = next() + 1;
+		int body_lbl = next() + 3;
+		int next_lbl = next() + 6;
+
+		// counter = 0
+		string counter_place = newTemp();
+		stream << counter_place << "=0";
+		emit(stream.str());
+		stream.str("");
+
+		// if_lbl: if count < id goto body_lbl
+		stream << "if " << counter_place << "<" << id_place << " goto " << body_lbl;
+		emit(stream.str());
+		stream.str("");
+
+		// goto next_lbl
+		stream << "goto " << next_lbl;
+		emit(stream.str());
+		stream.str("");
+
+		// body_lbl: elem = elem + exp
+		stream << elem_place << "=" << elem_place << aop << Exp_place;
+		emit(stream.str());
+		stream.str("");
+
+		// counter = counter + 1
+		stream << counter_place << "=" << counter_place << "+1";
+		emit(stream.str());
+		stream.str("");
+
+		// goto if
+		stream << "goto " << if_lbl;
+		emit(stream.str());
+		stream.str("");
+	}
+}
 
 int main()
 {

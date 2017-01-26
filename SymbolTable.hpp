@@ -70,8 +70,8 @@ public:
 		string id2search(id);
 		for (Tables::iterator table = tables.begin() ; table != tables.end() ; table++ ){
 			for (table::iterator elem = (*table).begin(); elem != (*table).end(); elem++){
-				string cuurentId(get<0>(*elem));
-				if (cuurentId == id2search)
+				string currentId(get<0>(*elem));
+				if (currentId == id2search)
 					return true;
 			}
 		}
@@ -82,8 +82,8 @@ public:
 	Type find(string id){
 		for (Tables::iterator table = tables.begin(); table != tables.end(); table++){
 			for (table::iterator elem = (*table).begin(); elem != (*table).end(); elem++){
-				string cuurentId(get<0>(*elem));
-				if (cuurentId == id)
+				string currentId(get<0>(*elem));
+				if (currentId == id)
 					return string2type(get<2>(*elem));
 			}
 		}
@@ -94,8 +94,8 @@ public:
 	string getPlace(string id){
 		for (Tables::iterator table = tables.begin(); table != tables.end(); table++){
 			for (table::iterator elem = (*table).begin(); elem != (*table).end(); elem++){
-				string cuurentId(get<0>(*elem));
-				if (cuurentId == id)
+				string currentId(get<0>(*elem));
+				if (currentId == id)
 					return get<3>(*elem);
 			}
 		}
@@ -104,22 +104,22 @@ public:
 	}
 
 	void setInit(string id){
-		string id2search(id);
 		for (Tables::iterator table = tables.begin(); table != tables.end(); table++){
 			for (table::iterator elem = (*table).begin(); elem != (*table).end(); elem++){
-				string cuurentId(get<0>(*elem));
-				if (cuurentId == id2search)
+				string currentId(get<0>(*elem));
+				if (currentId == id)
+					//cout << "setInit: " + currentId + " == " << id << " => " << get<3>(*elem) << " = True (init)" << endl;
 					get<4>(*elem) = true;
 			}
 		}
 	}
 
 	bool isInit(string id){
-		string id2search(id);
 		for (Tables::iterator table = tables.begin(); table != tables.end(); table++){
 			for (table::iterator elem = (*table).begin(); elem != (*table).end(); elem++){
-				string cuurentId(get<0>(*elem));
-				if (cuurentId == id2search)
+				string currentId(get<0>(*elem));
+				if (currentId == id)
+					//cout << "isInit: " + currentId + " == " << id << " => " << get<3>(*elem) << " is True (init)" << endl;
 					return get<4>(*elem);
 			}
 		}
@@ -131,8 +131,8 @@ public:
 		list<tableElement> list;
 		for (Tables::iterator table = tables.begin(); table != tables.end(); table++){
 			for (table::iterator elem = (*table).begin(); elem != (*table).end(); elem++){
-				Type cuurentType = string2type(get<2>(*elem));
-				if (cuurentType == type)
+				Type currentType = string2type(get<2>(*elem));
+				if (currentType == type)
 					list.push_front(*elem);
 			}
 		}
